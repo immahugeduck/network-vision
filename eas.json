@@ -21,18 +21,10 @@
       }
     },
     "production": {
-      "autoIncrement": true,
-      "ios": {
-        "enterpriseProvisioning": "automatic"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
-    "production": {
-      "ios": {
-        "appleId": "",
-        "ascAppId": ""
-      }
-    }
+    "production": {}
   }
 }
