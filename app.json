@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Phone Invasion",
+    "slug": "phone-invasion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "phoneinvasion",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.phoneinvasion.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Phone Invasion reads your location permission status to report which apps can access your location. It does not track or store your location.",
+        "NSCameraUsageDescription": "Phone Invasion reads your camera permission status only. It does not use the camera."
+      }
+    },
+    "android": {
+      "package": "com.phoneinvasion.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      "expo-notifications",
+      "expo-camera"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

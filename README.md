@@ -1,13 +1,35 @@
 # Phone Invasion
 
-Phone Invasion is a native SwiftUI iOS app for lightweight on-device privacy and security checks.
+A privacy and network scanner for iOS/Android built with **Expo** (React Native).
+It runs on your own phone through **Expo Go** — no paid Apple Developer license required.
 
-## Repository layout
+## What it does (all from real device signals)
 
-- `ios/` — native iOS source, Xcode project, and app resources
-- `.github/workflows/` — CI build check
-- `index.html` + `vercel.json` — minimal static landing page so Vercel deployments succeed
+- **Scan** — an overall privacy assessment derived from live signals (no fake threats).
+- **Network** — connection type, IP, internet reachability, VPN detection, airplane mode.
+- **Privacy** — the real grant status of Location, Notifications, and Camera permissions.
+- **Device** — manufacturer, model, OS, and whether it's a physical device.
 
-## Notes
+## Why some features were removed
 
-This repo was cleaned to remove unrelated web app files and vendor directories.
+The original native Swift version tried to do cell-tower / RF / deep file scanning.
+Apple does not expose baseband, RF, or cross-app file access to third-party apps,
+so those features cannot work in Expo Go (or any App Store app). Rather than fake
+them, they were removed. Every value in this app is read directly from the OS.
+
+## Run it on your phone
+
+1. Install the **Expo Go** app from the App Store / Play Store.
+2. In this project folder:
+   ```bash
+   npm install
+   npx expo start
+   ```
+3. Scan the QR code in the terminal with your phone's camera (iOS) or the Expo Go app (Android).
+
+## Tech
+
+- Expo SDK 57 + Expo Router (file-based routing in `app/`)
+- `expo-network`, `@react-native-community/netinfo` — connectivity
+- `expo-device` — device metadata
+- `expo-location`, `expo-notifications`, `expo-camera` — permission status only
