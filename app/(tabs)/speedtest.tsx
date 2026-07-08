@@ -7,6 +7,9 @@ import { Metric } from "@/components/Metric"
 import { ProgressBar } from "@/components/ProgressBar"
 import { PrimaryButton } from "@/components/PrimaryButton"
 import { runSpeedTest, emptyProgress, type SpeedProgress, type SpeedPhase } from "@/lib/speedtest"
+import { useNetworkInfo } from "@/hooks/useNetworkInfo"
+import { usePublicIp } from "@/hooks/usePublicIp"
+import { saveRun } from "@/lib/history"
 import { colors, radius, spacing } from "@/theme/colors"
 
 const PHASE_LABEL: Record<SpeedPhase, string> = {
@@ -26,17 +29,42 @@ function fmt(n: number | null, digits = 1): string {
 export default function SpeedTestScreen() {
   const [progress, setProgress] = useState<SpeedProgress>(emptyProgress())
   const [running, setRunning] = useState(false)
+  const [saved, setSaved] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const { info: net } = useNetworkInfo()
+  const { info: pub } = usePublicIp()
 
   const start = useCallback(async () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
     setRunning(true)
+    setSaved(false)
     setProgress({ ...emptyProgress(), phase: "latency" })
-    await runSpeedTest(setProgress, controller.signal)
+    const result = await runSpeedTest(setProgress, controller.signal)
     setRunning(false)
-  }, [])
+
+    // Persist the completed run with its network context for the AI report.
+    if (
+      result.phase === "done" &&
+      result.downloadMbps !== null &&
+      result.uploadMbps !== null &&
+      result.latencyMs !== null &&
+      result.jitterMs !== null
+    ) {
+      await saveRun({
+        downloadMbps: Number(result.downloadMbps.toFixed(1)),
+        uploadMbps: Number(result.uploadMbps.toFixed(1)),
+        pingMs: result.latencyMs,
+        jitterMs: result.jitterMs,
+        connectionType: net.type,
+        isp: pub?.isp ?? null,
+        countryCode: pub?.countryCode ?? null,
+        isVpn: net.isVpn ?? null,
+      })
+      setSaved(true)
+    }
+  }, [net.type, net.isVpn, pub])
 
   const stop = useCallback(() => {
     abortRef.current?.abort()
@@ -112,6 +140,13 @@ export default function SpeedTestScreen() {
         </Card>
       ) : null}
 
+      {saved && !running ? (
+        <Card style={styles.savedCard}>
+          <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+          <Text style={styles.savedText}>Saved to history — view trends and AI insights in the Report tab.</Text>
+        </Card>
+      ) : null}
+
       {running ? (
         <PrimaryButton label="Stop" onPress={stop} variant="outline" icon="stop-circle" />
       ) : (
@@ -182,6 +217,18 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.textPrimary,
     fontSize: 14,
+  },
+  savedCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    borderColor: colors.success,
+  },
+  savedText: {
+    flex: 1,
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
   },
   note: {
     flexDirection: "row",

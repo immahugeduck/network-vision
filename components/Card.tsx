@@ -1,5 +1,5 @@
 import type React from "react"
-import { View, StyleSheet, type ViewStyle } from "react-native"
+import { View, StyleSheet, type ViewStyle, type StyleProp } from "react-native"
 import { colors, radius, spacing } from "@/theme/colors"
 
 export function Card({
@@ -7,7 +7,7 @@ export function Card({
   style,
 }: {
   children: React.ReactNode
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
 }) {
   return <View style={[styles.card, style]}>{children}</View>
 }
