@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Phone Invasion",
+    "slug": "phone-invasion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "phoneinvasion",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.phoneinvasion.app"
+    },
+    "android": {
+      "package": "com.phoneinvasion.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "server"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
