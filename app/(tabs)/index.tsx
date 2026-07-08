@@ -1,56 +1,111 @@
-import { useCallback, useState } from "react"
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native"
+import { useCallback, useEffect, useState } from "react"
+import { View, Text, StyleSheet, ActivityIndicator, Pressable } from "react-native"
+import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { Screen } from "@/components/Screen"
 import { Card } from "@/components/Card"
 import { StatusBadge } from "@/components/StatusBadge"
 import { useNetworkInfo } from "@/hooks/useNetworkInfo"
-import { usePermissions } from "@/hooks/usePermissions"
+import { usePublicIp } from "@/hooks/usePublicIp"
+import { quickPing, type PingResult } from "@/lib/netcheck"
 import { buildFindings, overallLevel, levelLabel } from "@/lib/assessment"
 import { colors, radius, spacing, statusColor } from "@/theme/colors"
 
-export default function ScanScreen() {
+function typeLabel(t: string): string {
+  const map: Record<string, string> = {
+    WIFI: "Wi-Fi",
+    wifi: "Wi-Fi",
+    CELLULAR: "Cellular",
+    cellular: "Cellular",
+    ETHERNET: "Ethernet",
+    NONE: "None",
+    none: "None",
+  }
+  return map[t] ?? (t ? t.charAt(0).toUpperCase() + t.slice(1) : "Unknown")
+}
+
+export default function DiagnosticsScreen() {
+  const router = useRouter()
   const { info, loading: netLoading, reload: reloadNet } = useNetworkInfo()
-  const { items, loading: permLoading, reload: reloadPerms } = usePermissions()
+  const { info: pub, loading: pubLoading, reload: reloadPub } = usePublicIp()
+  const [ping, setPing] = useState<PingResult>(null)
+  const [pinging, setPinging] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const runPing = useCallback(async () => {
+    setPinging(true)
+    const result = await quickPing()
+    setPing(result)
+    setPinging(false)
+  }, [])
+
+  useEffect(() => {
+    runPing()
+  }, [runPing])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
-    await Promise.all([reloadNet(), reloadPerms()])
+    await Promise.all([reloadNet(), reloadPub(), runPing()])
     setRefreshing(false)
-  }, [reloadNet, reloadPerms])
+  }, [reloadNet, reloadPub, runPing])
 
-  const loading = netLoading || permLoading
-  const findings = buildFindings(info, items)
+  const busy = netLoading || pubLoading || pinging
+  const findings = buildFindings(info, pub, ping)
   const level = overallLevel(findings)
   const color = statusColor(level)
 
   return (
     <Screen
-      title="Phone Invasion"
-      subtitle="A privacy scan built only on signals your device actually exposes."
+      title="Diagnostics"
+      subtitle="A live snapshot of your connection health."
       refreshing={refreshing}
       onRefresh={onRefresh}
     >
       <Card style={styles.hero}>
         <View style={[styles.ring, { borderColor: color }]}>
-          <Ionicons name="shield-checkmark" size={40} color={color} />
+          <Ionicons
+            name={level === "risk" ? "alert-circle" : level === "caution" ? "warning" : "checkmark-circle"}
+            size={44}
+            color={color}
+          />
         </View>
-        <Text style={styles.heroLevel}>{levelLabel(level)}</Text>
-        <StatusBadge level={level} label={level.toUpperCase()} />
-        <Text style={styles.heroHint}>Pull down to re-run the scan.</Text>
+        <Text style={styles.heroLevel}>{busy && findings.length === 0 ? "Checking…" : levelLabel(level)}</Text>
+        <StatusBadge level={level} label={typeLabel(info.type)} />
+        <Text style={styles.heroHint}>Pull down to re-run the check.</Text>
       </Card>
 
-      {loading && findings.length === 0 ? (
+      {/* Quick stats */}
+      <View style={styles.statsRow}>
+        <View style={styles.stat}>
+          <Ionicons name="pulse" size={18} color={colors.primary} />
+          <Text style={styles.statValue}>{ping ? `${ping.latencyMs}` : pinging ? "…" : "—"}</Text>
+          <Text style={styles.statLabel}>Ping (ms)</Text>
+        </View>
+        <View style={styles.stat}>
+          <Ionicons name="git-compare" size={18} color={colors.primary} />
+          <Text style={styles.statValue}>{ping ? `${ping.jitterMs}` : pinging ? "…" : "—"}</Text>
+          <Text style={styles.statLabel}>Jitter (ms)</Text>
+        </View>
+        <View style={styles.stat}>
+          <Ionicons name="globe-outline" size={18} color={colors.primary} />
+          <Text style={styles.statValue} numberOfLines={1}>
+            {pub ? pub.countryCode || "?" : "…"}
+          </Text>
+          <Text style={styles.statLabel}>Region</Text>
+        </View>
+      </View>
+
+      {/* Findings */}
+      {busy && findings.length === 0 ? (
         <Card>
           <View style={styles.loadingRow}>
             <ActivityIndicator color={colors.primary} />
-            <Text style={styles.loadingText}>Reading device signals…</Text>
+            <Text style={styles.loadingText}>Running checks…</Text>
           </View>
         </Card>
       ) : (
         <View style={styles.findings}>
-          <Text style={styles.sectionTitle}>Findings</Text>
+          <Text style={styles.sectionTitle}>Summary</Text>
           {findings.map((f) => (
             <Card key={f.id} style={styles.finding}>
               <View style={styles.findingHeader}>
@@ -63,14 +118,28 @@ export default function ScanScreen() {
         </View>
       )}
 
-      <Card style={styles.note}>
-        <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
-        <Text style={styles.noteText}>
-          {
-            "Deep features like cell-tower or RF analysis require hardware access Apple does not expose to apps, so they are intentionally omitted rather than faked."
-          }
-        </Text>
-      </Card>
+      {/* Quick actions */}
+      <Text style={styles.sectionTitle}>Run a test</Text>
+      <View style={styles.actionsRow}>
+        <Pressable
+          style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
+          onPress={() => router.push("/speedtest")}
+          accessibilityRole="button"
+        >
+          <Ionicons name="speedometer" size={26} color={colors.primary} />
+          <Text style={styles.actionTitle}>Speed Test</Text>
+          <Text style={styles.actionSub}>Download & upload</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
+          onPress={() => router.push("/network")}
+          accessibilityRole="button"
+        >
+          <Ionicons name="git-network" size={26} color={colors.primary} />
+          <Text style={styles.actionTitle}>Network Tools</Text>
+          <Text style={styles.actionSub}>DNS & reachability</Text>
+        </Pressable>
+      </View>
     </Screen>
   )
 }
@@ -97,6 +166,30 @@ const styles = StyleSheet.create({
   heroHint: {
     fontSize: 13,
     color: colors.textMuted,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  stat: {
+    flex: 1,
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: colors.textPrimary,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: "600",
   },
   loadingRow: {
     flexDirection: "row",
@@ -142,17 +235,32 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
-  note: {
+  actionsRow: {
     flexDirection: "row",
-    gap: spacing.sm,
-    alignItems: "flex-start",
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radius.md,
+    gap: spacing.md,
   },
-  noteText: {
+  action: {
     flex: 1,
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 19,
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.xl,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  actionPressed: {
+    opacity: 0.7,
+    borderColor: colors.primary,
+  },
+  actionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    marginTop: spacing.xs,
+  },
+  actionSub: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
 })

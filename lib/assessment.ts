@@ -1,5 +1,6 @@
 import type { NetworkInfo } from "@/hooks/useNetworkInfo"
-import type { PermissionItem } from "@/hooks/usePermissions"
+import type { PublicIpInfo } from "@/hooks/usePublicIp"
+import type { PingResult } from "@/lib/netcheck"
 import type { StatusLevel } from "@/theme/colors"
 
 export type Finding = {
@@ -9,63 +10,81 @@ export type Finding = {
   level: StatusLevel
 }
 
-// Derives an honest assessment purely from real signals we can actually read.
-// No invented threats — every finding maps to observable device/network state.
-export function buildFindings(net: NetworkInfo, perms: PermissionItem[]): Finding[] {
+// Derives an honest connection health summary purely from real signals:
+// live connectivity, the public IP lookup, and a measured latency check.
+export function buildFindings(net: NetworkInfo, pub: PublicIpInfo | null, ping: PingResult): Finding[] {
   const findings: Finding[] = []
 
   // Connectivity
   if (net.isConnected === false) {
     findings.push({
       id: "offline",
-      title: "Offline",
-      detail: "No active network connection detected.",
-      level: "secure",
+      title: "No connection",
+      detail: "This device is not connected to any network right now.",
+      level: "risk",
     })
-  } else if (net.isInternetReachable === false) {
+    return findings
+  }
+
+  if (net.isInternetReachable === false) {
     findings.push({
       id: "no-internet",
-      title: "Connected, no internet",
-      detail: "You are on a network but the internet is not reachable. Captive portals can intercept traffic.",
+      title: "Connected, but no internet",
+      detail: "You're on a network but the internet isn't reachable — a captive portal or outage may be to blame.",
       level: "caution",
+    })
+  } else {
+    findings.push({
+      id: "online",
+      title: "Internet reachable",
+      detail: "Your device has a working internet connection.",
+      level: "secure",
     })
   }
 
-  // VPN
+  // Latency quality
+  if (ping) {
+    const level: StatusLevel = ping.latencyMs < 60 ? "secure" : ping.latencyMs < 150 ? "caution" : "risk"
+    findings.push({
+      id: "latency",
+      title: `Latency ${ping.latencyMs} ms · jitter ${ping.jitterMs} ms`,
+      detail:
+        level === "secure"
+          ? "Responsive connection — great for calls, gaming, and streaming."
+          : level === "caution"
+            ? "Moderate latency. Usable, but real-time apps may feel slightly laggy."
+            : "High latency. Video calls and gaming may struggle.",
+      level,
+    })
+  }
+
+  // VPN posture (context dependent — only a caution on Wi-Fi)
   findings.push(
     net.isVpn
       ? {
           id: "vpn-on",
           title: "VPN active",
-          detail: "Traffic is routed through a VPN interface.",
+          detail: "Traffic is routed through a VPN tunnel.",
           level: "secure",
         }
       : {
           id: "vpn-off",
           title: "No VPN detected",
-          detail: "Traffic is not routed through a VPN. On public Wi-Fi this reduces privacy.",
+          detail:
+            net.type === "WIFI" || net.type === "wifi"
+              ? "You're on Wi-Fi without a VPN. On untrusted networks a VPN adds privacy."
+              : "No VPN tunnel is active.",
           level: net.type === "WIFI" || net.type === "wifi" ? "caution" : "unknown",
         },
   )
 
-  // Location permission is the most privacy-sensitive
-  const loc = perms.find((p) => p.key === "location")
-  if (loc?.state === "granted") {
+  // ISP / location context
+  if (pub) {
     findings.push({
-      id: "location-granted",
-      title: "Location access granted",
-      detail: "At least one app permission for location is currently allowed.",
-      level: "caution",
-    })
-  }
-
-  const granted = perms.filter((p) => p.state === "granted").length
-  if (perms.length > 0) {
-    findings.push({
-      id: "perms-summary",
-      title: `${granted} of ${perms.length} sensitive permissions granted`,
-      detail: "Review the Privacy tab to see exactly which sensors are exposed.",
-      level: granted === 0 ? "secure" : granted >= perms.length ? "risk" : "caution",
+      id: "isp",
+      title: pub.isp,
+      detail: `Public IP ${pub.ip} · ${pub.city}, ${pub.country}`,
+      level: "secure",
     })
   }
 
@@ -82,12 +101,12 @@ export function overallLevel(findings: Finding[]): StatusLevel {
 export function levelLabel(level: StatusLevel): string {
   switch (level) {
     case "secure":
-      return "Looking good"
+      return "Healthy"
     case "caution":
       return "Needs attention"
     case "risk":
-      return "Action recommended"
+      return "Problem detected"
     default:
-      return "Scanning"
+      return "Checking"
   }
 }

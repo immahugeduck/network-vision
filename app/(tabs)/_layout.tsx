@@ -22,22 +22,22 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Scan",
-          tabBarIcon: ({ color, size }) => <Ionicons name="shield-checkmark" size={size} color={color} />,
+          title: "Diagnostics",
+          tabBarIcon: ({ color, size }) => <Ionicons name="pulse" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="speedtest"
+        options={{
+          title: "Speed",
+          tabBarIcon: ({ color, size }) => <Ionicons name="speedometer" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="network"
         options={{
           title: "Network",
-          tabBarIcon: ({ color, size }) => <Ionicons name="wifi" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="privacy"
-        options={{
-          title: "Privacy",
-          tabBarIcon: ({ color, size }) => <Ionicons name="lock-closed" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="git-network" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
