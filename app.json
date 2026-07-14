@@ -19,7 +19,15 @@
       "bundler": "metro",
       "output": "server"
     },
-    "plugins": ["expo-router"],
+    "plugins": ["expo-router", "expo-updates"],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6f3468f5-87d8-4b3a-81bb-b51298dbb01b"
+      }
+    },
     "experiments": {
       "typedRoutes": true
     }
