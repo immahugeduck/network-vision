@@ -1,12 +1,14 @@
 import { generateText, Output } from "ai"
+import { createAnthropic } from "@ai-sdk/anthropic"
 import { reportSchema } from "@/lib/report"
 
 // Server-side AI analysis endpoint. Runs only on the dev server (development)
 // or your deployed server (production) — never on the device — so the
-// AI_GATEWAY_API_KEY stays secret. The client posts its saved run history and
+// ANTHROPIC_API_KEY stays secret. The client posts its saved run history and
 // gets back a structured, schema-validated report.
 
-const MODEL = "anthropic/claude-haiku-4.5"
+const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const MODEL = anthropic("claude-haiku-4-5")
 
 type IncomingRun = {
   timestamp: number
