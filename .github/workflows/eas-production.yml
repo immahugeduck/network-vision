@@ -1,0 +1,36 @@
+name: EAS Production Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-production:
+    name: Build production app (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - android
+          - ios
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Start production build
+        run: eas build --platform ${{ matrix.platform }} --profile production --non-interactive --no-wait

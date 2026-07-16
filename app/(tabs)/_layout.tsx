@@ -1,46 +1,59 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { Tabs } from "expo-router"
+import { Ionicons } from "@expo/vector-icons"
+import { colors } from "@/theme/colors"
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
-const tabs: { name: string; title: string; icon: IconName; iconFocused: IconName }[] = [
-  { name: 'index', title: 'Scan', icon: 'shield-outline', iconFocused: 'shield' },
-  { name: 'trackers', title: 'Trackers', icon: 'eye-outline', iconFocused: 'eye' },
-  { name: 'files', title: 'Files', icon: 'folder-outline', iconFocused: 'folder' },
-  { name: 'network', title: 'Network', icon: 'wifi-outline', iconFocused: 'wifi' },
-  { name: 'privacy', title: 'Privacy', icon: 'lock-closed-outline', iconFocused: 'lock-closed' },
-  { name: 'rf', title: 'RF Shield', icon: 'radio-outline', iconFocused: 'radio' },
-  { name: 'report', title: 'AI Report', icon: 'document-text-outline', iconFocused: 'document-text' },
-];
-
-export default function TabLayout() {
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
         },
-        tabBarActiveTintColor: Colors.blue,
-        tabBarInactiveTintColor: Colors.textMuted,
-        tabBarLabelStyle: { fontSize: 10 },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+        },
       }}
     >
-      {tabs.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.title,
-            tabBarIcon: ({ focused, color, size }) => (
-              <Ionicons name={focused ? tab.iconFocused : tab.icon} size={size} color={color} />
-            ),
-          }}
-        />
-      ))}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Diagnostics",
+          tabBarIcon: ({ color, size }) => <Ionicons name="pulse" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="speedtest"
+        options={{
+          title: "Speed",
+          tabBarIcon: ({ color, size }) => <Ionicons name="speedometer" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="network"
+        options={{
+          title: "Network",
+          tabBarIcon: ({ color, size }) => <Ionicons name="git-network" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="report"
+        options={{
+          title: "Report",
+          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="device"
+        options={{
+          title: "Device",
+          tabBarIcon: ({ color, size }) => <Ionicons name="phone-portrait" size={size} color={color} />,
+        }}
+      />
     </Tabs>
-  );
+  )
 }

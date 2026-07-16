@@ -4,57 +4,32 @@
     "slug": "phone-invasion",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
     "scheme": "phoneinvasion",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.phoneinvasion.app",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Phone Invasion uses your location to check for nearby rogue cell towers.",
-        "NSLocalNetworkUsageDescription": "Phone Invasion scans your local network for security threats.",
-        "NSCameraUsageDescription": "Phone Invasion audits camera permission access.",
-        "NSMicrophoneUsageDescription": "Phone Invasion audits microphone permission access."
-      }
+      "supportsTablet": true,
+      "bundleIdentifier": "com.phoneinvasion.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
-      },
       "package": "com.phoneinvasion.app",
-      "versionCode": 1,
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_NETWORK_STATE",
-        "ACCESS_WIFI_STATE",
-        "INTERNET"
-      ]
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "server"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font"
-    ],
-    "experiments": {
-      "typedRoutes": true
+    "plugins": ["expo-router", "expo-updates"],
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "extra": {
       "eas": {
-        "projectId": "74dbd06e-45f0-4eb1-9b97-e31a4346e717"
+        "projectId": "6f3468f5-87d8-4b3a-81bb-b51298dbb01b"
       }
+    },
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }

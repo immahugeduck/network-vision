@@ -1,28 +1,21 @@
-# Xcode / iOS
-.DS_Store
-DerivedData/
-build/
-*.xcuserstate
-*.xcworkspace/xcuserdata/
-*.xcodeproj/xcuserdata/
-
-# Node / Expo
+# Expo / React Native
 node_modules/
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# EAS
-.easignore
+# Native
+ios/
+android/
+*.orig.*
 
-# Environment
+# Metro
+.metro-health-check*
+
+# Env / secrets
+.env*.local
 .env
-.env.local
-.env.*.local
 
-# Misc
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# macOS
+.DS_Store
