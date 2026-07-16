@@ -1,17 +1,19 @@
-name: EAS Development Build
+name: EAS Production Build
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
-  build-development:
-    name: Build development app
+  build-production:
+    name: Build production app (${{ matrix.platform }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      matrix:
+        platform:
+          - android
+          - ios
 
     steps:
       - name: Checkout repository
@@ -32,5 +34,5 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Start development build
-        run: eas build --platform all --profile development --non-interactive --no-wait
+      - name: Start production build
+        run: eas build --platform ${{ matrix.platform }} --profile production --non-interactive --no-wait
