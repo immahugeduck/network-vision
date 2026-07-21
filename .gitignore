@@ -13,6 +13,9 @@ android/
 # Metro
 .metro-health-check*
 
+# Vercel
+.vercel
+
 # Env / secrets
 .env*.local
 .env
